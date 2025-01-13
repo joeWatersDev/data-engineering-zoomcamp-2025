@@ -1,3 +1,5 @@
+[Docker Video Lesson](https://www.youtube.com/watch?v=EYNwNlOrpr0&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=5)
+
 # DOCKER
 
 Allows you to run images which are packages containing OS, software, libraries, etc.
