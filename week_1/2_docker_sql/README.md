@@ -2,7 +2,7 @@
 
 Allows you to run images which are packages containing OS, software, libraries, etc.
 
-## BENEFITS
+### BENEFITS
 
 - Reproducable: Can create an image and deploy it to numerous different systems, with all dependancies in place.
 - Isolation: If an error occurs, something is misconfigured, etc. in a running instance, no worries! Your original image still exists and you can use it to recover.
@@ -28,7 +28,7 @@ These are command line commands.
 - COPY adds a file to the working directory. The last arg will always be the destination, all prior args will be copied to that destination (in this case copying our pipeline file into the container's working directory and keeping the same name)
 - ENTRYPOINT specifies commands to execute from within the container. In this case, run python, then execute our pipelin script
 
-## TO BUILD CONTAINER
+### TO BUILD CONTAINER
 
 	docker build .
 
@@ -37,7 +37,7 @@ These are command line commands.
 
 	docker build -t test:pandas .
 
-## TO RUN CONTAINER
+### TO RUN CONTAINER
 
 	docker run -it test:pandas [args]
 
