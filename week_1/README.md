@@ -4,9 +4,11 @@ I am using WSL2 on Windows in order to run Docker Desktop. [This guide](https://
 
 Then, from the Ubuntu Terminal, install Anaconda to get access to and manage Python, Pip, Jupyter, and other handy Data Engineer tools.
 
-[Docker Video Lesson](https://www.youtube.com/watch?v=EYNwNlOrpr0&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=5)
+
 
 # DOCKER
+
+[Docker Video Lesson](https://www.youtube.com/watch?v=EYNwNlOrpr0&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=5)
 
 Allows you to run images which are packages containing OS, software, libraries, etc.
 
@@ -51,9 +53,9 @@ These are command line commands.
 
 - runs the container tagged as test:pandas in interactive mode (-it) with some optional args passed in
 
-[Postgres Video Lesson](https://www.youtube.com/watch?v=2JM-ziJt0WI&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=7)
-
 # POSTGRES
+
+[Postgres Video Lesson](https://www.youtube.com/watch?v=2JM-ziJt0WI&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=7)
 
 Docker has built-in Postgres container. We can run the container to set up a database and populate it with a dataset
 
