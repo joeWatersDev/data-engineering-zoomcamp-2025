@@ -1,6 +1,6 @@
 import sys
 
-import pandas as pd
+import pandas as pd # type: ignore
 
 print(sys.argv)
 
