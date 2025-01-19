@@ -74,3 +74,95 @@ docker run -it \
 
 - -v is for mounting the volume. The host machine will have a dirctory mapped to the directory in the container.
 - -p is the port argument. 5432 is the port on both the container and host machine
+
+We can connect to the DB using the PGCLI package. Install with:
+
+```
+pip install pgcli
+```
+
+then, connect to the DB with 
+
+```
+pgcli -h localhost -p 5432 -u root -d ny_taxi
+```
+
+and enter the password when prompted (we set it as "root")
+
+### INGESTING DATA
+
+We will be populating our database with data from the NYC Taxi and Limousine Commission. They have data on rides taken via NYC Taxi cabs. We will use the [January 2021 dataset](https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz).
+
+We will need to take the raw data from the CSV and transform it so we can create a schema and populate it in our Postgres database. To do so, we will use Jupyter notebooks to create a Python script for the task. The script will utilize a data analysis and manipulation library called Pandas to transform the data.
+
+Start by running
+
+```
+ jupyter notebook
+```
+
+In our notebook, we import the pandas library. Then, we create a pandas dataframe using the csv (limiting to 100 rows as the original data is over 1 million).
+
+```
+import pandas as pd
+
+df = pd.read_csv('yellow_tripdata_2021-01.csv',nrows=100)
+```
+
+We can use the pandas module io on our dataframe to turn it into DDL (data definition language) which can be used to create our database schema.
+
+```
+print(pd.io.sql.get_schema(df, name='yellow_taxi_data'))
+```
+
+Unfortunately, pandas didn't recognize pickup and dropoff as the correct type, categorizing it as text rather than timestamp. So before we generate the DDL, let's fix that.
+
+```
+df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
+df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+```
+
+Now we are going to connect to our database using sqlalchemy.
+
+```
+from sqlalchemy import create_engine
+engine = create_engine('postgresql://root:root@localhost:5432/ny_taxi')
+```
+
+Then create an python iterator so we can add our data to the db in chunks, rather than all 1 million+ simultaneously.
+
+```
+df_iter = pd.read_csv('yellow_tripdata_2021-01.csv', iterator=True, chunksize=100000)
+```
+
+We load the next 100,000 rows as the current dataframe, and repeat the datatype fix for them.
+
+```
+df = next(df_iter)
+df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
+df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+```
+
+Now lets actually take the dataframe data and load it into our pg database. We will use pandas to_sql to load it, using the connection we created with sqlalchemy. We start by only loading the very first row, which is the column names,by specifying head(0).
+
+```
+df.head(0).to_sql(name='yellow_taxi_data', con=engine, if_exists='replace')
+```
+
+Finally, we can use some python to loop adding each of the chunks. We can also benchmark how long each chunk took to load.
+
+```
+while True:
+    t_start = time()
+    
+    df = next(df_iter)
+    df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
+    df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+
+    df.to_sql(name='yellow_taxi_data', con=engine, if_exists='append')
+
+    t_end = time()
+
+    print('inserted another chunk..., took %.3f seconds' % (t_end - t_start))
+```
+
