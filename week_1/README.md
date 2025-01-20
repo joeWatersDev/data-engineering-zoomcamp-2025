@@ -165,4 +165,22 @@ while True:
 
     print('inserted another chunk..., took %.3f seconds' % (t_end - t_start))
 ```
+NICE! We can now query some basic info about our database, such as the number of rows, or say the highest cost trip.
 
+```
+select count(1) from yellow_taxi_data
+```
+>+---------+
+>| count   |
+>|---------|
+>| 1369765 |
+>+---------+
+
+```
+select max(total_amount) from yellow_taxi_data
+```
+>+---------+
+>| max     |
+>|---------|
+>| 7661.28 |
+>+---------+
