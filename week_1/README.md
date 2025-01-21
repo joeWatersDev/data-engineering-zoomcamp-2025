@@ -1,8 +1,8 @@
 # ENVIRONMENT SETUP
 
-I am using WSL2 on Windows in order to run Docker Desktop. [This guide](https://learn.microsoft.com/en-us/windows/wsl/install) is helpful to get started.
+Using WSL2 on Windows in order to run Docker Desktop. [This guide](https://learn.microsoft.com/en-us/windows/wsl/install) is helpful to get started.
 
-Then, from the Ubuntu Terminal, install Anaconda to get access to and manage Python, Pip, Jupyter, and other handy Data Engineer tools.
+Once initialized, install Anaconda from Ubuntu terminal to get access to and manage Python, Pip, Jupyter, and other Data Engineering tools.
 
 
 
@@ -184,3 +184,64 @@ select max(total_amount) from yellow_taxi_data
 >|---------|
 >| 7661.28 |
 >+---------+
+
+# PGADMIN
+
+Interacting with the DB through PGCLI is cumbersome. A more versatile method is using pgAdmin, a web based GUI for viewing and manipulating a Postgres DB. Lets spin up a docker image for it.
+
+```
+docker run -it \
+-e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+-e PGADMIN_DEFAULT_PASSWORD="root" \
+-p 8080:80 \
+dpage/pgadmin4
+```
+
+This launches Ppgdmin and maps local port 8080 to the container's port 80. So if we visit localhost:8080 in our browser, we can access the GUI.
+
+In the GUI, we can register a new server(right click on Servers) with our Postgres docker's connection information.
+
+> Host name/address: localhost
+> Port: 5432
+> Username: root
+> Password: root
+
+However, Postgres is running on one docker container, while pgAdmin is in another. We need to use Docker network to allow them to communicate.
+
+### Docker Network
+
+We can create a network that our Docker services can communicate over with the following.
+
+```
+docker network create pg-network
+```
+
+Then, we need to restart our Postgres and pgAdmin with additional parameters to place them on the same docker network.
+
+```
+docker run -it \
+    -e POSTGRES_USER="root" \
+    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_DB="ny_taxi" \
+    -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+    --network=pg-network \
+    --name pg-database \
+    -p 5432:5432 postgres:13
+```
+
+```
+docker run -it \
+    -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+    -e PGADMIN_DEFAULT_PASSWORD="root" \
+    -p 8080:80 \
+    --network=pg-network \
+    --name pgadmin \
+dpage/pgadmin4
+```
+
+And now we can actually register the database in pgAdmin. Note, the host name needs to match the name given to the Postgres db
+
+> Host name/address: pg-database
+> Port: 5432
+> Username: root
+> Password: root
