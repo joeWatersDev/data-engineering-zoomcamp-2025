@@ -245,3 +245,34 @@ And now we can actually register the database in pgAdmin. Note, the host name ne
 > Port: 5432
 > Username: root
 > Password: root
+
+### CREATING INGEST SCRIPT
+
+We will take our Jupyter notebook and turn it into a python script that can be run from the shell. This works for now, but eventually we will want to use a more versatile orchestration tool like Apache Airflow or Kestra.
+
+In shell, we can use the following to convert the notebook to a script.
+
+```
+jupyter nbconvert --to=script upload_data.ipynb
+```
+
+We then make some modifications to the script to allow it to be executed from the command line and take in command line arguments such as username and password of the db.
+
+```
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Ingest CSV data to Postgres')
+    parser.add_argument('user', help='user name for postgres')      
+    parser.add_argument('password', help='password for postgres')
+    parser.add_argument('host', help='host for postgres')      
+    parser.add_argument('port', help='port for postgres')      
+    parser.add_argument('db', help='database name for postgres')      
+    parser.add_argument('table-name', help='name of the table we will write the results to')      
+    parser.add_argument('url', help='url of the csv file')      
+
+
+    args = parser.parse_args()
+
+    main(args)
+```
+
+We will also rename the script to "ingest_data.py", which describes the process of pulling data from a source to the db.
