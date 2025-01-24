@@ -292,7 +292,7 @@ python ingest_data.py \
     --url=${URL}
 ```
 
-# DOCKFILE AGAIN
+# DOCKERFILE AGAIN
 
 Now, we can Dockerize the script. We will run our script through our Dockerfile so we can easily and repeatedly ingest our data to a Postgres database. 
 
