@@ -276,3 +276,55 @@ if __name__ == '__main__':
 ```
 
 We will also rename the script to "ingest_data.py", which describes the process of pulling data from a source to the db.
+
+We can call the script to create the db in the following way.
+
+```
+URL="https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz"
+
+python ingest_data.py \
+    --user=root \
+    --password=root \
+    --host=localhost \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url=${URL}
+```
+
+# DOCKFILE AGAIN
+
+Now, we can Dockerize the script. We will run our script through our Dockerfile so we can easily and repeatedly create a container running our Postgres Database and pgAdmin. 
+
+After adding some dependencies and changing our entrypoint, our Dockerfile now looks like this.
+
+```
+FROM python:3.9
+
+RUN apt-get install wget
+RUN pip install pandas sqlalchemy psycopg2
+
+WORKDIR /app
+COPY ingest_data.py ingest_data.py
+
+ENTRYPOINT ["python", "ingest_data.py"]
+```
+
+We can now build the container with this
+
+```
+docker build -t taxi_ingest:v001 .
+```
+
+and run it with this (note that we specify the network before the name of the image, because it is a docker parameter rather than an argument being passed into the script).
+
+```
+docker run -it --network=pg-network taxi_ingest:v001 \
+    --user=root \
+    --password=root \
+    --host=pg-database \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url=${URL}
+```
