@@ -294,7 +294,7 @@ python ingest_data.py \
 
 # DOCKFILE AGAIN
 
-Now, we can Dockerize the script. We will run our script through our Dockerfile so we can easily and repeatedly create a container running our Postgres Database and pgAdmin. 
+Now, we can Dockerize the script. We will run our script through our Dockerfile so we can easily and repeatedly ingest our data to a Postgres database. 
 
 After adding some dependencies and changing our entrypoint, our Dockerfile now looks like this.
 
@@ -327,4 +327,44 @@ docker run -it --network=pg-network taxi_ingest:v001 \
     --db=ny_taxi \
     --table_name=yellow_taxi_trips \
     --url=${URL}
+```
+# DOCKER COMPOSE
+
+We now have two containers set up, one for the Postgres DB and another for pgAdmin. The commands to run them in the terminal have a cumbersome syntax, and for this situation, we would always want both running.
+
+A solution to these issues is creating a Docker Compose file. These are used to create multiple docker containers simultaneously. As an added bonus, all containers spun up with the same compose file will automatically be placed in a network, saving us a bit of work.
+
+We create the docker-compose.yaml file and modify our two sets of terminal commands.
+
+```
+services:
+  pgdatabase:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=ny_taxi
+    volumes:
+      - "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw"
+    ports:
+    - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    ports:
+      - "8080:80"
+```
+
+We can then execute the compose file with
+
+```
+docker-compose up
+```
+
+If you add -d as an argument, you run in detached mode, which gives you back access to the terminal. When finished, you can shutdown your services with
+
+```
+docker-compose down
 ```
