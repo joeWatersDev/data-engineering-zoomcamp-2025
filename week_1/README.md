@@ -368,3 +368,114 @@ If you add -d as an argument, you run in detached mode, which gives you back acc
 ```
 docker-compose down
 ```
+
+# SQL
+
+We are going to do some SQL queries on our DB. Quickly we will add a new table to the DB that will let us map the trips to different areas of NYC.
+
+We can run the following in Jupyter to get the data and put it to our DB.
+
+```
+!wget https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
+
+df_zones = pd.read_csv('taxi_zone_lookup.csv')
+
+df_zones.to_sql(name='zones', con=engine, if_exists='replace')
+```
+
+Now we have added the zone coding as a new table to our ny_taxi DB. In pgAdmin, we can query our trip table and join it to our zones table where the PULocation ID or DOLocationID matches a LocationID.
+
+```
+SELECT * 
+FROM 
+  yellow_taxi_trips t JOIN zones zpu
+  ON t."PULocationID" = zpu."LocationID" JOIN zones zdo 
+  ON t."DOLocationID" = zdo."LocationID"
+WHERE 
+	t."PULocationID" = zpu."LocationID" AND
+	t."DOLocationID" = zdo."LocationID"
+LIMIT 100;
+```
+
+This works, but the results are cluttered and way more info than we need. Let's simplify it by replacing the * with the following.
+
+```
+tpep_pickup_datetime,
+tpep_dropoff_datetime,
+t."PULocationID",
+t."DOLocationID",
+CONCAT(zpu."Borough", '/', zpu."Zone") AS "pickup_location",
+CONCAT(zdo."Borough", '/', zdo."Zone") AS "dropoff_location"
+```
+
+Let's also verify the quality of our dataset. Are there any entries missing a pickup or dropoff location?
+
+```
+SELECT 
+"PULocationID",
+"DOLocationID"
+FROM yellow_taxi_trips t
+WHERE "DOLocationID" is NULL
+LIMIT 100;
+```
+
+How about any trips with a Location ID that doesn't actually correspond to a real zone?
+
+```
+SELECT 
+"PULocationID",
+"DOLocationID"
+FROM yellow_taxi_trips t
+WHERE "DOLocationID" NOT IN (SELECT "LocationID" FROM zones)
+```
+
+In this case, we find no missing values. But if we had some, that may cause our initial query where we joined the two tables to fail. *If for example, there was a LocationID missing from the zone table, values from the trips table with that zone would not appear in our query*. This is a product of doing an **inner join**.
+
+If we wanted all rows to appear from both tables, even if some values would be null, we need to instead perform an **outer join**. In the above scenario, replace JOIN with LEFT JOIN means we will still be left with trip values even if no LocationID can be matched to the zones table.
+
+As an explainer:
+
+>A    B
+>-    -
+>1    3
+>2    4
+>3    5
+>4    6
+>
+>select * from a JOIN b on a.a = b.b;
+>
+>a | b
+>--+--
+>3 | 3
+>4 | 4
+>
+>select * from a LEFT JOIN b on a.a = b.b;
+>
+>a |  b
+>--+-----
+>1 | null
+>2 | null
+>3 |    3
+>4 |    4
+
+Finally, we can do some useful analytics using GROUP BY! Let's say we wanted to know the following:
+
+>Each day, what drop off location had the most trips, and what was the highest fare to it?
+
+The query might look like this.
+```
+SELECT
+	CAST(tpep_dropoff_datetime AS DATE) AS "day",
+	"DOLocationID",
+	count(1) as "count",
+	MAX(total_amount)
+FROM 
+	yellow_taxi_trips t
+GROUP BY
+	1, 2
+ORDER BY 
+	1 ASC, 
+	2 ASC;
+```
+
+Note: Using 1 and 2 in the ORDER BY and GROUP BY clauses are aliases for the first and second columns listed in the SELECT clause.
