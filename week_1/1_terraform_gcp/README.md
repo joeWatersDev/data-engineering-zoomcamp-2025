@@ -23,6 +23,6 @@ On the GCP end, we need to first set up a **service account* which allows GCP to
 
 We will start by making an account that has storage permissions (for GCP bucket) and permissions to run BigQuery.
 
-![Service Account Permissions](httpr://github.com/joeWatersDev/data-engineering-zoomcamp-2025/week_1/1_terraform_gcp/gcp_service_account.PNG)
+![Service Account Permissions](https://github.com/joeWatersDev/data-engineering-zoomcamp-2025/blob/main/week_1/1_terraform_gcp/gcp_service_account.PNG)
 
 We then create a key for our local machine for the service account. Keep it secret, keep it safe.
