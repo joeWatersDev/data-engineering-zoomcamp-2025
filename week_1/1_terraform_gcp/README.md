@@ -16,3 +16,13 @@ Key Terraform commands:
 - Plan: What is being done/created
 - Apply: Run what's in the tf files
 - Destroy: Remove all infrastructure defined in tf files
+
+### GCP SETUP
+
+On the GCP end, we need to first set up a **service account* which allows GCP to authenticate our machine and has permissions to create resources.
+
+We will start by making an account that has storage permissions (for GCP bucket) and permissions to run BigQuery.
+
+![Service Account Permissions](httpr://github.com/joeWatersDev/data-engineering-zoomcamp-2025/week_1/1_terraform_gcp/gcp_service_account.PNG)
+
+We then create a key for our local machine for the service account. Keep it secret, keep it safe.
